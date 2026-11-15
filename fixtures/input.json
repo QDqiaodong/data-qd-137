@@ -1,0 +1,43 @@
+{
+  "applicants": [
+    {
+      "id": "A",
+      "preferences": [
+        "X",
+        "Y"
+      ]
+    },
+    {
+      "id": "B",
+      "preferences": [
+        "X",
+        "Y"
+      ]
+    },
+    {
+      "id": "C",
+      "preferences": [
+        "Y"
+      ]
+    }
+  ],
+  "programs": [
+    {
+      "id": "X",
+      "capacity": 1,
+      "ranking": [
+        "B",
+        "A"
+      ]
+    },
+    {
+      "id": "Y",
+      "capacity": 1,
+      "ranking": [
+        "A",
+        "C",
+        "B"
+      ]
+    }
+  ]
+}
