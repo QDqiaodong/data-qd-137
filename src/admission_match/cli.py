@@ -17,6 +17,11 @@ contract (``admission_match.materials``)::
 
     admission-match materials init|ingest|report ...
 
+The independent admission finance library owns its own subcommand group and
+contract (``admission_match.finance``)::
+
+    admission-match finance init|apply|report ...
+
 Subcommands are detected manually so the legacy flag-only invocation keeps
 working exactly as before.
 """
@@ -32,7 +37,8 @@ from .model import analyze
 from .store import initialize, apply_request, export_report
 
 DESCRIPTION = 'Applicant-proposing deferred acceptance with blocking-pair audit'
-COMMANDS = ('init', 'apply', 'export', 'once', 'audit', 'materials')
+COMMANDS = ('init', 'apply', 'export', 'once', 'audit', 'materials',
+            'finance')
 
 
 def run_once(source):
@@ -77,6 +83,10 @@ def main(argv=None):
         # parser, exit codes and error messages; just forward the rest.
         from .materials.cli import main as materials_main
         return materials_main(argv[1:])
+    if command == 'finance':
+        # The finance library is likewise a fully independent contract.
+        from .finance.cli import main as finance_main
+        return finance_main(argv[1:])
     if command is not None:
         argv = argv[1:]
     parser = _parser_for(command) if command else _legacy_parser()

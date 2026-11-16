@@ -1,0 +1,3 @@
+bank_id,version,kind,status,currency,amount_minor,origin_id
+c-tuition-1,1,credit,posted,CNY,10000,
+r-tuition-1,1,refund,posted,CNY,1000,c-tuition-1

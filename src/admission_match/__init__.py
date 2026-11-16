@@ -15,4 +15,9 @@ The package contains three independent contracts:
   immutable file objects, per-applicant per-kind slot versioning in a SQLite
   directory and day-based readiness reports.  It neither allocates places nor
   performs the bilateral audit.
+* :mod:`admission_match.finance` implements the independent admission fee
+  clearing library (``finance init/apply/report``): streaming bank-fact
+  ingestion, per-item claims and refund allocations, and auditable applicant
+  fee balances.  It never allocates places, judges materials or audits
+  preferences.
 """

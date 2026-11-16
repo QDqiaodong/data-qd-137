@@ -1,0 +1,13 @@
+{
+  "request_id": "demo-request-0001",
+  "expected_revision": 0,
+  "bank_sha256": "a6e7e2ca211f1bb50a78e270baa990874773467c8db5be5a3fed581f00f739fa",
+  "operations": [
+    {"type": "claim", "id": "e-claim-a", "bank_id": "c-tuition-1",
+     "applicant": "A", "amount_minor": 6000},
+    {"type": "claim", "id": "e-claim-b", "bank_id": "c-tuition-1",
+     "applicant": "B", "amount_minor": 4000},
+    {"type": "refund", "id": "e-refund-a", "bank_id": "r-tuition-1",
+     "claim_id": "e-claim-a", "amount_minor": 1000}
+  ]
+}

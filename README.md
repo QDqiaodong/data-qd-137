@@ -113,6 +113,44 @@ IMMEDIATE` 锁内重读 revision 与各槽版本，因此崩溃后只可见完�
 report 在同一快照内逐对象校验，损坏/缺失对象使整次失败并保留旧报告；测试见
 `tests/test_materials.py`，含双子进程竞争、故障注入恢复与 144 MiB 多文件 RSS 核对。
 
+## 独立招生费用收退清算库（finance）
+
+第四条独立契约：把银行流水与管理员的逐笔认领、退款分摊变成可核算的申请者费用余额。
+它**不分配录取名额、不判定材料齐备、不核查志愿双边声明，也不发起真实付款**；持久化、
+并发与崩溃语义见 [招生费用清算契约](docs/finance_contract.md)。仅用标准库（含
+sqlite3），离线运行，不与工作台、audit、materials 或单次命令共享业务模块。
+
+```sh
+.venv/bin/admission-match finance init   --source fixtures/finance_roster.json \
+  --charges fixtures/finance_charges.json --db run/finance.sqlite
+.venv/bin/admission-match finance apply  --db run/finance.sqlite \
+  --request fixtures/finance_request.json --bank fixtures/finance_bank.csv
+.venv/bin/admission-match finance report --db run/finance.sqlite \
+  --output run/finance-report.json
+# python -m admission_match.finance.cli init|apply|report ... 等价
+# python -m admission_match.cli finance ... 同样等价
+```
+
+要点：`init` 拒绝已存在 DB，保存 roster/charges 原始字节 SHA 与费用账户（CNY/USD/EUR，
+`due_minor` 0..10^12），之后不再依赖原文件。银行 CSV 为严格七列契约（表头固定、禁止
+空白行、不 strip、无前导零、refund 必须指向同币种 credit、版本链连续且
+kind/currency/origin_id 不可变、单文件最多 200000 行/256 MiB）。CSV **逐行流式**哈希
+并写入私有临时 SQLite 暂存库，解析期间不持主库事务、不整文件入内存，实测 120000 行 /
+17.3 MiB 输入峰值 RSS 约 26–40 MiB（边界 96 MiB）；解析失败清除暂存，遗留暂存不会自动
+入账。
+
+整个 revision 过渡在一个 `BEGIN IMMEDIATE` 事务内原子完成：锁内重查 expected_revision、
+银行版本与分录依赖，银行不可变历史/当前指针、分录、撤销链、请求结果与 revision 一起
+提交；故障注入证明银行写入后被杀只会回滚到完整旧版。相同 request_id 的规范请求幂等
+重放（先于 revision 与文件检查，CSV 删除也能重放），异进程争用同一 revision 最多一个
+成功。所有金额用 Python 整数求和（可能超过 SQLite INTEGER 范围也不退化 REAL），禁止
+跨币种相抵；银行更正按新金额重验全部既有分摊，有效退款依赖会阻止原 credit 作废。
+report 输出单一致快照的银行当前事实与未分摊额、全部分录撤销状态及账户
+due/net_paid/due_remaining，拒绝符号链接与覆盖 DB。测试见 `tests/test_finance.py`
+（含真实双子进程竞争、银行写入与分摊提交之间杀进程的恢复核对）与
+`tests/test_finance_scale.py`（100000+ 行 / 16+ MiB CSV 的 RSS 实测，以及积累 10000 条
+历史分录后用 SQL trace 与 EXPLAIN QUERY PLAN 证明小批次不重放/全扫历史）。
+
 ## 当前业务与样例
 # Applicant-proposing matching v1
 

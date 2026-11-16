@@ -1,0 +1,8 @@
+{
+  "charges": [
+    {"applicant": "A", "currency": "CNY", "due_minor": 10000},
+    {"applicant": "A", "currency": "USD", "due_minor": 500},
+    {"applicant": "B", "currency": "CNY", "due_minor": 8000},
+    {"applicant": "C", "currency": "EUR", "due_minor": 300}
+  ]
+}
