@@ -1,0 +1,17 @@
+{
+  "limits": {
+    "max_unresolved_per_program": 1,
+    "max_unresolved_share": {
+      "denominator": 2,
+      "numerator": 1
+    }
+  },
+  "source_sha256": "7bce2c207e9850d24c14560fb5eeacfc5fd3a8bbdebca23aa154507101a1fada",
+  "waivers": [
+    {
+      "applicant": "C",
+      "program": "X",
+      "reason": "school confirmed ranking row pending import"
+    }
+  ]
+}

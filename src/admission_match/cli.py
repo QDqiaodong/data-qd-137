@@ -7,6 +7,11 @@ independent subcommands with their own contract::
     admission-match apply  --db DB --request FILE
     admission-match export --db DB --output FILE
 
+The pre-import bilateral declaration audit is a read-only data-quality
+subcommand that never runs matching or touches the workbench::
+
+    admission-match audit  --source FILE --policy FILE --output FILE
+
 Subcommands are detected manually so the legacy flag-only invocation keeps
 working exactly as before.
 """
@@ -16,12 +21,13 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from .audit import audit_report
 from .common import read, save
 from .model import analyze
 from .store import initialize, apply_request, export_report
 
 DESCRIPTION = 'Applicant-proposing deferred acceptance with blocking-pair audit'
-COMMANDS = ('init', 'apply', 'export', 'once')
+COMMANDS = ('init', 'apply', 'export', 'once', 'audit')
 
 
 def run_once(source):
@@ -49,6 +55,10 @@ def _parser_for(command):
     elif command == 'export':
         parser.add_argument('--db', type=Path, required=True)
         parser.add_argument('--output', type=Path, required=True)
+    elif command == 'audit':
+        parser.add_argument('--source', type=Path, required=True)
+        parser.add_argument('--policy', type=Path, required=True)
+        parser.add_argument('--output', type=Path, required=True)
     else:
         return _legacy_parser()
     return parser
@@ -68,6 +78,18 @@ def main(argv=None):
                 raise ValueError('input and output must differ')
             report = run_once(args.source)
             save(args.output, report)
+        elif command == 'audit':
+            if args.output.resolve() in (args.source.resolve(),
+                                         args.policy.resolve()):
+                raise ValueError('output must differ from source and policy')
+            source_data, source_digest = read(args.source)
+            policy_data, policy_digest = read(args.policy)
+            report = audit_report(source_data, source_digest,
+                                  policy_data, policy_digest)
+            save(args.output, report)
+            print(json.dumps(report, sort_keys=True, ensure_ascii=False,
+                             allow_nan=False))
+            return 0 if report['ok'] else 1
         elif command == 'init':
             data, digest = read(args.source)
             initialize(args.db, data, digest)

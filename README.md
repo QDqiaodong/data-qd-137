@@ -50,6 +50,41 @@ cli.py 衔接数据链路。fixtures 为明确自制样例，代码与样例采�
 （预言机不调用生产选择函数），`test_workbench.py` 含真实双子进程竞争与故障注入
 恢复，`test_scale.py` 核对 500/100/40 生产上限及匹配成本不随请求日志增长。
 
+## 招生导入前双边声明核查（audit）
+
+只读数据质量产物：对照申请者志愿表与项目排序表，定位需要回源确认的单边声明。
+不运行录取匹配、不读写 SQLite 工作台、不修改源数据；`--source` 沿用
+[数据契约](docs/contract.md) 的 applicants/programs 结构与全部边界。
+
+```sh
+.venv/bin/admission-match audit --source fixtures/audit_source.json \
+    --policy fixtures/audit_policy.json --output run/audit.json
+# python -m admission_match.cli audit ... 等价
+```
+
+核查对象是两侧声明的并集（不枚举申请者×项目全组合）：双方都声明为 `mutual`，
+仅志愿表声明为 `applicant_only`，仅排序表声明为 `program_only`，双方都未声明不产生
+记录。报告列出全部单边记录（按 applicant、program 排序，保留双方原列表 0 基位置，
+缺失侧为 null）、三类总数、按项目排序的声明并集/差异/免审/未免审汇总与阈值结果。
+
+政策文件是严格 JSON，恰含三个字段：
+
+- `source_sha256`：必须等于本次源文件原始字节 SHA256，源字节任何变化都使旧政策失效；
+- `waivers`：`{applicant, program, reason}` 数组，每条唯一对应当前源中真实存在的
+  一条单边声明且 `reason` 非空；过期、重复、针对双方声明或不存在组合的条目使整次
+  核查失败。有效免审只把该记录标记为 `waived` 并使所属项目未解决数减一，记录仍在
+  报告中，两侧名次不被改写；
+- `limits`：恰含 `max_unresolved_per_program`（0..500 整数）与
+  `max_unresolved_share`（`{numerator, denominator}`，分母 1..100000，分子不大于
+  分母）。每个项目以免审后未解决数为分子、声明并集数为分母，按整数交叉相乘判定，
+  不使用浮点；声明并集为空的项目比例为 0。
+
+退出码：全部通过为 0；任一项目超出数量或比例限制时仍写出完整报告并以 1 退出，
+报告 `exceeded_programs` 明确列出超限项目；输入/政策/输出路径错误以 2 退出并保留
+旧报告。输出拒绝符号链接及与源文件或政策文件相同的路径；相同输入字节与政策字节
+必得字节相同报告。样例见 `fixtures/audit_source.json` 与
+`fixtures/audit_policy.json`（后者内嵌前者字节 SHA256）。
+
 ## 当前业务与样例
 # Applicant-proposing matching v1
 
