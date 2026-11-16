@@ -1,0 +1,18 @@
+{
+  "requirements": [
+    {
+      "program": "X",
+      "kinds": [
+        "id_copy",
+        "transcript"
+      ]
+    },
+    {
+      "program": "Y",
+      "kinds": [
+        "id_copy",
+        "statement"
+      ]
+    }
+  ]
+}

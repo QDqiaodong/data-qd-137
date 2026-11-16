@@ -85,6 +85,34 @@ cli.py 衔接数据链路。fixtures 为明确自制样例，代码与样例采�
 必得字节相同报告。样例见 `fixtures/audit_source.json` 与
 `fixtures/audit_policy.json`（后者内嵌前者字节 SHA256）。
 
+## 独立招生材料库（materials）
+
+第三条独立契约：从本地文件收取申请材料，按内容 SHA256 去重保存不可变文件对象，
+在 SQLite 目录账本中保留每个申请者材料槽的版本，并向招生管理员回答指定日期各志愿
+的材料是否齐备。它**不做录取分配**，也**不做志愿表与排序表的双边声明免审**；
+持久化、并发与崩溃语义见 [招生材料库契约](docs/materials_contract.md)。仅用标准库
+（含 sqlite3），不连接外部服务，不与工作台或单次命令共享业务模块。
+
+```sh
+.venv/bin/admission-match materials init   --store run/mat \
+  --source fixtures/materials_roster.json --policy fixtures/materials_policy.json
+.venv/bin/admission-match materials ingest --store run/mat \
+  --manifest one-batch.json --files path/to/batch-files
+.venv/bin/admission-match materials report --store run/mat --day 100 \
+  --output run/materials-report.json
+# python -m admission_match.materials.cli <子命令> ... 等价
+```
+
+要点：`init` 拒绝任何已存在 ROOT，并保存原始 roster/policy 字节 SHA，之后不再依赖
+这两个文件；材料按 1 MiB 分块流式接收（最大 64 MiB 对象、单批累计 512 MiB，
+峰值 RSS 低于 64 MiB），路径拒绝绝对路径、反斜线、`.`/`..` 与任一层符号链接，
+实际字节数与 SHA 均须与声明吻合；相同内容只存一个对象，重用前重新校验且不覆盖坏
+对象。对象先于目录事务完整落盘（复制期间不持写事务），目录提交时在 `BEGIN
+IMMEDIATE` 锁内重读 revision 与各槽版本，因此崩溃后只可见完整旧版或完整新版，
+重放幂等（相同规范清单返回首次结果），异进程争用同一 revision 最多一个成功。
+report 在同一快照内逐对象校验，损坏/缺失对象使整次失败并保留旧报告；测试见
+`tests/test_materials.py`，含双子进程竞争、故障注入恢复与 144 MiB 多文件 RSS 核对。
+
 ## 当前业务与样例
 # Applicant-proposing matching v1
 

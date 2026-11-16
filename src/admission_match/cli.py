@@ -12,6 +12,11 @@ subcommand that never runs matching or touches the workbench::
 
     admission-match audit  --source FILE --policy FILE --output FILE
 
+The independent admission materials library owns its own subcommand group and
+contract (``admission_match.materials``)::
+
+    admission-match materials init|ingest|report ...
+
 Subcommands are detected manually so the legacy flag-only invocation keeps
 working exactly as before.
 """
@@ -27,7 +32,7 @@ from .model import analyze
 from .store import initialize, apply_request, export_report
 
 DESCRIPTION = 'Applicant-proposing deferred acceptance with blocking-pair audit'
-COMMANDS = ('init', 'apply', 'export', 'once', 'audit')
+COMMANDS = ('init', 'apply', 'export', 'once', 'audit', 'materials')
 
 
 def run_once(source):
@@ -67,6 +72,11 @@ def _parser_for(command):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv and argv[0] in COMMANDS else None
+    if command == 'materials':
+        # The materials library is an independent contract with its own
+        # parser, exit codes and error messages; just forward the rest.
+        from .materials.cli import main as materials_main
+        return materials_main(argv[1:])
     if command is not None:
         argv = argv[1:]
     parser = _parser_for(command) if command else _legacy_parser()
