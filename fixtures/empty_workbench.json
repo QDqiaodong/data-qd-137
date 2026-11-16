@@ -1,0 +1,9 @@
+{
+  "applicants": [],
+  "programs": [
+    {"id": "P0", "capacity": 0, "region": "only", "ranking": []}
+  ],
+  "regions": [
+    {"id": "only", "parent": null, "capacity": 0}
+  ]
+}

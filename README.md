@@ -27,6 +27,29 @@ python3 -m venv .venv
 src/admission_match/model.py 为业务模型，相关算法模块独立组织；common.py 提供受限JSON及报告发布，
 cli.py 衔接数据链路。fixtures 为明确自制样例，代码与样例采用MIT许可。
 
+## 共享区域配额录取工作台（SQLite）
+
+在保留上面单次命令的同时，新增可反复办理的招生工作台，业务输入、持久化与并发
+语义见 [工作台数据契约](docs/workbench_contract.md)。仅用标准库（含 sqlite3），
+不连接外部服务；新契约独立，旧 DA、blocking_pairs 与 `common.save` 不作为新增
+能力的替代实现。
+
+```sh
+.venv/bin/admission-match init   --source fixtures/workbench.json --db run/wb.sqlite
+.venv/bin/admission-match apply  --db run/wb.sqlite --request one-request.json
+.venv/bin/admission-match export --db run/wb.sqlite --output run/snapshot.json
+# python -m admission_match.cli <子命令> 等价
+```
+
+要点：同一学院多个项目共享区域上限（区域构成一棵有根树，容量约束全部后代项目的
+总录取）；已确认录取受保护，候补结果随退档或配额调整按跨项目选择规则 `C_L`
+重新计算。`apply` 是带乐观 revision 的原子事务，支持异进程并发、幂等重放与崩溃
+后的整版可见性；`offer_token` 绑定库密钥、revision、申请者与项目。`export` 输出
+字节确定的一致快照。空申请者与零容量样例见 `fixtures/empty_workbench.json`。
+测试中 `test_regional.py` 用独立枚举小实例的预言机核对申请方最优稳定结果
+（预言机不调用生产选择函数），`test_workbench.py` 含真实双子进程竞争与故障注入
+恢复，`test_scale.py` 核对 500/100/40 生产上限及匹配成本不随请求日志增长。
+
 ## 当前业务与样例
 # Applicant-proposing matching v1
 

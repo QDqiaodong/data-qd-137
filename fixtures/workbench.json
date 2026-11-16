@@ -1,0 +1,19 @@
+{
+  "applicants": [
+    {"id": "A", "preferences": ["X", "Y"]},
+    {"id": "B", "preferences": ["X", "Y"]},
+    {"id": "C", "preferences": ["X", "Y"]},
+    {"id": "D", "preferences": ["Y", "X"]}
+  ],
+  "programs": [
+    {"id": "X", "capacity": 1, "region": "r-east",
+     "ranking": ["B", "A", "C", "D"]},
+    {"id": "Y", "capacity": 1, "region": "r-west",
+     "ranking": ["D", "C", "A", "B"]}
+  ],
+  "regions": [
+    {"id": "root", "parent": null, "capacity": 2},
+    {"id": "r-east", "parent": "root", "capacity": 1},
+    {"id": "r-west", "parent": "root", "capacity": 1}
+  ]
+}
